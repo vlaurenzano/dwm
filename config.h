@@ -26,10 +26,10 @@ static const Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class      instance    title       tags mask     isfloating   monitor */
-	{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
-	{ "Firefox",  NULL,       NULL,       1 << 8,       0,           -1 },
-	{ "Gnome-panel", NULL,    NULL,       1 << 7,       1,           -1 },
+	/* class                  instance    title       tags mask     isfloating   monitor */
+	{ "jetbrains-pycharm",    NULL,       NULL,        0,            1,           -1 },
+	{ "Firefox",              NULL,       NULL,        1 << 8,       0,           -1 },
+	{ "Gnome-panel",          NULL,    NULL,           1 << 7,       1,           -1 },
 
 };
 
@@ -47,6 +47,7 @@ static const Layout layouts[] = {
 
 /* key definitions */
 #define MODKEY Mod1Mask
+#define WINDOWSKEY Mod4Mask
 #define TAGKEYS(KEY,TAG) \
 	{ MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
@@ -60,6 +61,7 @@ static const Layout layouts[] = {
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
 static const char *termcmd[]  = { "terminator", NULL };
+static const char *lockcmd[]  = { "slock", NULL }; 
 //static const char *powercmd[] = { "gnome-session-save", "--shutdown-dialog", NULL };
 //static const char *logoutcmd[]= { "gnome-session-save", "--logout-dialog", NULL };
 
@@ -100,8 +102,8 @@ static Key keys[] = {
 	TAGKEYS(                        XK_7,                      6)
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
-	{ MODKEY|ShiftMask,             XK_q,        quit,          {0} },
-	//{ MODKEY|ShiftMask,             XK_l,      spawn,          {.v = logoutcmd} },
+	{ MODKEY|ShiftMask,             XK_q,        quit,         {0} },
+	{ WINDOWSKEY,                   XK_l,      spawn,         {.v = lockcmd} },
 };
 
 /* button definitions */
