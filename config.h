@@ -19,7 +19,7 @@ static const char *colors[][3]      = {
 };
 
 /* tagging */
-static const char *tags[] = { "main", "terminal", "browser", "4", "5", "6", "7", "8", "9" };
+static const char *tags[] = { "garbage dump", "terminal", "browser", "github", "slack", "6", "7", "8", "9" };
 
 static const Rule rules[] = {
 	/* xprop(1):
@@ -27,7 +27,7 @@ static const Rule rules[] = {
 	 *	WM_NAME(STRING) = title
 	 */
 	/* class                  instance    title       tags mask     isfloating   monitor */
-	{ "jetbrains-pycharm",    NULL,       NULL,        0,            1,           -1 },
+//	{ "jetbrains-pycharm",    NULL,       NULL,        0,            1,           -1 },  
 	{ "Firefox",              NULL,       NULL,        1 << 8,       0,           -1 },
 	{ "Gnome-panel",          NULL,    NULL,           1 << 7,       1,           -1 },
 
