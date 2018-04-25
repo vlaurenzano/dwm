@@ -1,0 +1,5 @@
+#!/bin/sh
+while true;  
+	do  dwm > /dev/null; 
+	sleep 5; 
+done;
