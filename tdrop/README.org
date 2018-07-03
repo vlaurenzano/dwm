@@ -1,0 +1,253 @@
+* Demos
+This is a basic demo where tdrop is used to hide and show a terminal emulator on different desktops/workspaces:
+
+[[http://noctuid.github.io/tdrop/assets/termite.gif]]
+
+This is a basic demo where tdrop is used to turn the current window (emacs) into a dropdown and then hide and show it on different desktops/workspaces:
+
+[[http://noctuid.github.io/tdrop/assets/current.gif]]
+
+* Advantages Over Other Dropdown Terminals
+- Supports essentially any terminal or other program of your choice
+- Supports many window managers
+- Supports turning any window into a dropdown on the fly
+- Supports enforcing dropdown sizing and placement (e.g. to prevent panels from being hidden)
+- Supports tiled and floating dropdowns
+- Supports floating dropdown instances without requiring the user to create a rule to float all program instances (for some window managers that support both tiling and floating)
+- Supports using multiple dropdowns of the same program (see =-n=)
+- Supports automatically hiding a dropdown when opening a new window from it (and then optionally re-showing the dropdown when the window is closed)
+- Supports automatically starting programs and tmux, tmuxinator, or tmuxifier sessions
+- Supports automatically resizing dropdowns based on the current monitor's size
+- Has hooks for executing user commands
+
+* Requirements
+- bash and basic utilities (awk, sed, etc.)
+- xprop
+- xwininfo
+- xdotool
+
+Optional:
+- xrandr (required for -m)
+- tmux (required for -s)
+- tmuxinator (optional for -s)
+- tmuxifier (optional for -s)
+
+* Installation and Usage
+** Installation
+Tdrop is in the AUR as =tdrop-git= and is packaged for Void Linux as =tdrop=. It can also be installed by cloning this repo and running ~sudo make install~. One can then bind a key to it (e.g. with sxhkd).
+
+** Basic Sxhkd Example
+#+BEGIN_EXAMPLE
+# negative -w arg to account for a border width (default: 100%)
+alt + s
+    tdrop -ma -w -4 -y "$PANEL_HEIGHT" -s dropdown termite
+#+END_EXAMPLE
+
+The positional argument should be the name of a program in =$PATH= (as opposed to the full path to a program) and should not contain any flags (see =-f= if you want to pass additional flags to the program when running it). It should always be the last argument.
+
+** Basic Flags
+=-w= / =--width=, =-h= / =--height=, =-x= / =--xoff=, and =-y= / =--yoff= can be used to set the window size/position. The argument to any of these can be a number (e.g. =-w 800=) or a percentage (e.g. =-w 100%=). Negative numbers correspond to that many pixels less than 100% of the screen width (e.g. =-w -4=).
+
+=-s= / =--session= should only be used for supported terminals and if the user wants to start/attach to a tmux or tmuxinator session.
+
+Tdrop has basic checks to print errors for malformed commands (e.g. to require one positional argument). If a tdrop command does not work, please run it in a terminal or check =/tmp/tdrop/log= for error messages and consult the manpage before making an issue. For more information, see the [[#troubleshooting][Troubleshooting]] section.
+
+*** Changes
+Long options can now be used with whitespace instead of requiring a ~=~ (i.e. =--long-opt value= and ~--long-opt=value~ are both fine).
+
+Old users please note that =-W|--normal-window=, =-z|--sleep-terminal=, and =-Z|--sleep-window= are no longer necessary and have been removed. Similarly, the old hook flags (=-p=, =-P=, =-M=, and =-O= as well as =--create-hook= and =--map-hook=) have been replaced with more specific and useful versions.
+
+** Automatic Window Manager Detection (=-a=)
+=-a= / =--auto-detect-wm= can be specified to automatically set certain options (=-l=, =-L=, =-d=, and/or =-i=) based on the current window manager. These flags (whether automatically or manually set) may be necessary for tdrop to behave correctly (e.g. they are required for =-w=, =-h=, =-x=, and =-y= to work correctly for tiling window managers with floating support). See the manpage for further details about these flags.
+
+Note that if you've used [[https://tools.suckless.org/x/wmname][wmname]] to change your window manager's name, tdrop will use any settings for that name instead. In this case, you will generally need to specify the real name of your window manager using the =--wm= flag in order for =-a= to work correctly (e.g. if you are using bspwm and have run =wmname LG3D=, you will need to specify =--wm bspwm=).
+
+** Monitor Awareness (=-m=)
+ =-m= / =--monitor-aware= can be specified to automatically resize the dropdown based on the current monitor's size when percentages are used for =-w= and/or =-h=. This may be helpful for users of multiple monitors who don't want dropdowns spanning across monitors.
+
+This is particularly useful when using a percentage or negative value with =-w=, =-h=, =-x=, and/or =-y=. For example, =-w -4= normally corresponds to a width 4 pixels less than 100% of the screen width (potentially the combined width of multiple monitors). With =-m=, the pixel values are calculated using the dimensions of the current monitor alone. Negative values may be useful when the window manager (possibly due to window decorations) causes a dropdown with =-w 100%= to go over the edge of the screen. The =-m= option will also automatically resize and/or reposition the dropdown when opening it on a different monitor when one or more of the geometry arguments are negative or percentages.
+
+Some window managers allow querying what the current monitor is (e.g. bspwm and i3), but for other window managers, tdrop determines the current monitor based on the position of the active window. For these window managers, if the desktop is empty, tdrop must wait for the dropdown to be created or mapped before getting the monitor info. This may cause a slight delay before the dropdown is properly resized. If =-m= does not work at all or there is a specific way to query for the current monitor in your window manager, please make an issue.
+
+See the manpage for more information.
+
+** Flicker
+For some window managers that require a window to be repositioned after re-mapping it, some flicker may be noticeable. This flicker has been mostly fixed for some window managers (e.g. in the Gnome Shell and Cinnamon DEs) and improved for others. It is usually worse on tiling managers where the window must be re-floated every time it is mapped. The way around this is to use rules to either always have the class or name (see =--name=) floated or one-time rules to only float the next instance of a class. For example, since bspwm has oneshot rules and generally doesn't alter the size/position of a window, there isn't any movement flicker.
+
+A more consistent workaround to improve visual flickering regardless of the window manager is to enable fade-in for the compositor. For compton this can be done by setting =fading = true;= and adjusting the =fade-delta= in the =~/.config/compton.conf= accordingly.
+
+** Hooks
+Tdrop provides hook flags that the user can specify to run commands at various stages during execution. These commands can make use of any global, internal tdrop variable, such as =$width=, =$height=, =$xoff=, =$yoff=, =$class=, and =$wid= (to prevent evaluation of these variables, the user can specify the hook command in single quotes). For example, to set a dropdown as always on top, the user could specify =-P 'wmctrl -i -r $wid -b add,above'=.
+
+Note that for =--pre-map-hook= and =--pre-map-float-command=, the window id is not guarunteed to be known (since the window may not have yet been created), so any script that makes use of these flags should first check if =$wid= is defined. The window id will not be defined for =--pre-create-hook= (even for =current=; I can change this if there is a use case for it).
+
+*** Pre Create
+=-c= / =--pre-create-hook=
+
+*Program* The command will run before the program is started.
+
+*Current* The command will run before unmapping the current window.
+
+*Hide and Show* No effect.
+
+*** Post Create
+=-C= / =--post-create-hook=
+
+*Program* The command will run after the program is started and its window is active.
+
+*Current* The command will run after unmapping the current window.
+
+*Hide and Show* No effect.
+
+*** Pre Map
+=-p= / =--pre-map-hook=
+
+*Program* / *Current* / *Show* The command will run before mapping the window.
+
+*Hide* No effect.
+
+*** Post Map
+=-P= / =--post-map-hook=
+
+*Program* / *Current* / *Show* The command will run after mapping the window.
+
+*Hide* No effect.
+
+*** Pre Unmap
+=-u= / =--pre-unmap-hook=
+
+*Program* / *Current* / *Hide* The command will run before unmapping the window.
+
+*Show* No effect.
+
+*** Post Unmap
+=-U= / =--post-unmap-hook=
+
+*Program* / *Current* / *Hide* The command will run after unmapping the window.
+
+*Show* No effect.
+
+*** Pre Float
+=-l= / =--pre-map-float-command=
+
+A command specifically meant to float the window. Note that if you specify this, it will override any defaults from =-a=.
+
+*Program* / *Current* The command will run before mapping the window.
+
+*Hide* No effect.
+
+*Show* The command will run before mapping the window only if it was previously floating.
+
+*** Post Float
+=-L= / =--post-map-float-command=
+
+A command specifically meant to float the window. Note that if you specify this, it will override any defaults from =-a=.
+
+*Program* / *Current* The command will run after mapping the window.
+
+*Hide* No effect.
+
+*Show* The command will run after mapping the window only if it was previously floating.
+
+** Auto-hiding
+In addition to creating dropdowns, tdrop can automatically hide a window and later un-hide it. For example, if gvim is opened to write a git commit message from the terminal, tdrop can automatically hide the terminal (dropdown or not) and restore it after the user is finished writing the commit message:
+
+#+BEGIN_EXAMPLE
+hide_on_open() {
+    tdrop -a auto_hide && "$@" && tdrop -a auto_show
+}
+alias gc='hide_on_open git commit'
+#+END_EXAMPLE
+
+The most useful application of this functionality is probably when opening videos, images, etc. in an external program from a file manager like ranger. For example, in the =rifle.conf=:
+
+#+BEGIN_EXAMPLE
+mime ^video, has mpv, X, flag f = tdrop -a auto_hide && mpv -- "$@" && tdrop -a auto_show
+#+END_EXAMPLE
+
+* Tested With
+** Terminals
+These terminals have been tested with tdrop and support the =-s= and =-a= flags unless otherwise specified:
+
+- Alacritty
+- cool-retro-term
+- GNOME terminal (GNOME, Unity, Cinnamon, etc.)
+- [[https://github.com/kovidgoyal/kitty][kitty]]
+- Konsole (KDE)
+- LilyTerm (requires =confirm_to_execute_command 0= in config for =-s= or =-f '-e...'=)
+- LXTerminal (LXDE)
+- MATE terminal (MATE)
+- QTerminal (LXDE)
+- Roxterm
+- Sakura
+- Terminology (Enlightenment)
+- Termite
+- Tilix (previously terminix)
+- tinyterm/minyterm
+- URxvt (including urxvtd)
+- Xfce4-terminal (XFCE)
+- xiate
+- XTerm
+
+If your terminal doesn't work with tdrop, feel free to make an issue. Please follow the steps in the [[#troubleshooting][Troubleshooting]] section.
+
+** Window Managers
+The primary goal of tdrop is to "just work" with any window manager. The primary differences between how tdrop deals with different window managers is the strategy it takes for floating only the dropdown (as opposed to all instances of the class that the dropdown is). There are three types of window managers as far as tdrop is concerned:
+
+*** Tiling without Floating Support
+If your window manager does not support floating, there's nothing to worry about. Binding a key to =tdrop <flags> terminal= should work. Options for resizing and movement that work only with floating window managers are not supported. One can, however, add post-map and post-unmap commands to do something like change the layout to fullscreen when showing a dropdown then revert the layout when hiding the dropdown. Automatic settings exist to do this for the following window managers (=-a=):
+- herbstluftwm
+
+*** Floating/Stacking
+For floating window managers, tdrop should also generally "just work", but you may need to add the =-a= option for auto-showing to correctly restore the previous geometry.
+
+That said, these are the floating window managers that currently have been tested:
+- mutter (gnome shell)
+- muffin (cinnamon)
+- xfwm4 (xfce)
+- metacity (gnome 2)
+- marco (mate)
+- kwin (kde)
+- openbox (lxde)
+- compiz (unity)
+- pekwm
+- fluxbox
+- blackbox
+- fvwm
+- sawfish
+- goomwwm
+
+If your dropdown moves out of place when being shown, make an issue, and I will add settings for it.
+
+*** Tiling with Floating Support
+These window managers currently will work with =-a= for a floating (instead of tiled) dropdown:
+- bspwm (support for versions prior to 0.9.1 was dropped on 2016/09/22)
+- i3
+- awesome
+
+Awesome support may be buggy; if you encounter problems, please report them.
+
+* Why Not Use wmctrl?
+Necessary features don't work on many window managers, including mine.
+
+* Why Not Use wmutils?
+Maybe in the future. The only advantage I can see over xdotool is that it can toggle mapping (=mapw -t=), but this wouldn't be used in this script anyway since different code is executed depending on whether or not the window is mapped or unmapped. Also the command names are somewhat cryptic.
+
+* Similar
+- [[https://github.com/lharding/lsh-bin/blob/master/drawer][drawer]]
+
+* Troubleshooting
+:PROPERTIES:
+:CUSTOM_ID: troubleshooting
+:END:
+
+** Tdrop does not work with some terminal/program
+Please make an issue. Including the following information would help resolve the problem more quickly.
+
+Basic:
+- The incorrect behavior: Does the window appear at all? Is the problem that it is not floated correctly in a supported wm? Or is it a feature request for =-a= support?
+- Whether things work as expected with a basic =tdrop <terminal>= (no flags) or whether the issue occurs with a specific flag (probably =-s=)
+
+Additional helpful information:
+- If the problem only occurs with the =-s= flag, the issue is likely due to the fact that not all terminals have compatible =-e= flags. It would be helpful if information on how the terminal's flag for executing a command works. Is it something other than =-e=? Are quotations required or incorrect ("-e 'command -flags ...'" vs "-e command flags")?
+- If the issue is with the dropdown behavior (e.g. tdrop keeps opening new windows for the program), does the program share a PID across all instances (e.g. open several windows and provide the output of =pgrep -l <program>=)? Does the program have a daemon and client?
