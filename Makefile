@@ -41,6 +41,11 @@ dist: clean
 	@gzip dwm-${VERSION}.tar
 	@rm -rf dwm-${VERSION}
 
+shortcuts:
+	@cp -f workflow ${DESTDIR}${PREFIX}/bin
+	@cp -f github   ${DESTDIR}${PREFIX}/bin
+	@cp -f hangouts ${DESTDIR}${PREFIX}/bin
+
 install: all
 	@echo installing executable file to ${DESTDIR}${PREFIX}/bin
 	@mkdir -p ${DESTDIR}${PREFIX}/bin

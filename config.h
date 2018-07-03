@@ -19,7 +19,7 @@ static const char *colors[][3]      = {
 };
 
 /* tagging */
-static const char *tags[] = { "garbage dump", "ide",  "terminal", "browser", "chat", "6", "7", "8", "9" };
+static const char *tags[] = { "garbage dump", "ide",  "terminal", "browser", "hangouts", "github", "slack", "navicat", "9" };
 
 static const Rule rules[] = {
 	/* xprop(1):
@@ -62,9 +62,7 @@ static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() 
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
 static const char *termcmd[]  = { "terminator", NULL };
 static const char *lockcmd[]  = { "slock", NULL }; 
-//static const char *powercmd[] = { "gnome-session-save", "--shutdown-dialog", NULL };
-//static const char *logoutcmd[]= { "gnome-session-save", "--logout-dialog", NULL };
-
+static const char *suspendcmd[] = {"sudo pm-suspend", NULL};
 
 
 
@@ -103,7 +101,8 @@ static Key keys[] = {
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
 	{ MODKEY|ShiftMask,             XK_q,        quit,         {0} },
-	{ WINDOWSKEY,                   XK_l,      spawn,         {.v = lockcmd} },
+	{ WINDOWSKEY,                   XK_l,       spawn,         {.v = lockcmd} },
+        { WINDOWSKEY,                   XK_s,       spawn,         {.v = suspendcmd} },
 };
 
 /* button definitions */
