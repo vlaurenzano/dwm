@@ -19,7 +19,7 @@ static const char *colors[][3]      = {
 };
 
 /* tagging */
-static const char *tags[] = { "garbage dump", "ide",  "terminal", "browser", "hangouts", "github", "slack", "navicat", "9" };
+static const char *tags[] = { "garbage dump", "ide", "3", "4", "5", "6", "7", "8", "8" };
 
 static const Rule rules[] = {
 	/* xprop(1):
@@ -65,6 +65,12 @@ static const char *lockcmd[]  = { "slock", NULL };
 static const char *suspendcmd[] = {"sudo pm-suspend", NULL};
 
 
+static const char *terminator[] = {"tdrop", "terminator", NULL};
+static const char *github[] = {"tdrop","-f","https://github.com --new-window", "-n", "vgithub", "google-chrome", NULL};
+static const char *ho[] = {"tdrop", "-f", "https://hangouts.google.com --new-window", "-n", "vhangout", "google-chrome", NULL};
+static const char *chrome[] = {"tdrop", "-f", "--new-window", "-n", "vchrome", "google-chrome", NULL};
+static const char *nautilus[] = {"tdrop", "nautilus", NULL};
+
 
 static Key keys[] = {
 	/* modifier                     key        function        argument */
@@ -102,7 +108,18 @@ static Key keys[] = {
 	TAGKEYS(                        XK_9,                      8)
 	{ MODKEY|ShiftMask,             XK_q,        quit,         {0} },
 	{ WINDOWSKEY,                   XK_l,       spawn,         {.v = lockcmd} },
-        { WINDOWSKEY,                   XK_s,       spawn,         {.v = suspendcmd} },
+    { WINDOWSKEY,                   XK_s,       spawn,         {.v = suspendcmd} },
+	{0 ,               XK_F12,     spawn,         {.v = terminator} },
+	{MODKEY,               XK_F12,     spawn,         {.v = terminator} },
+
+        {WINDOWSKEY,           XK_g,     spawn,         {.v = github} },
+        {WINDOWSKEY,           XK_h,     spawn,         {.v = ho} },
+        {0,           XK_F11,     spawn,         {.v = chrome} },
+        {0,           XK_F10,     spawn,         {.v = nautilus} },
+
+
+
+
 };
 
 /* button definitions */

@@ -1,5 +1,5 @@
 #!/bin/sh
-#while true;  
+#while true; do  
 dwm > /dev/null;
-	
+#	wmname LG3D;		
 #done;
